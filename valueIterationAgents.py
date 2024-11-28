@@ -105,9 +105,20 @@ class ValueIterationAgent(ValueEstimationAgent):
         """if there are no legal actions, return None"""
         if not actions:
             return None
-        """Compute the q_value for each action and return the best action"""
-        q_values = {action: self.computeQValueFromValues(state, action) for action in actions}
-        best_action = max(q_values, key=q_values.get)
+        """
+          Compute the q_value for each action and return the best action
+          based on the q_value
+        """
+
+        best_q_value = float('-inf')
+        best_action = None
+
+        for action in actions:
+            q_value = self.computeQValueFromValues(state, action)
+            if q_value > best_q_value:
+                best_q_value = q_value
+                best_action = action
+
         return best_action
 
     def getPolicy(self, state):
