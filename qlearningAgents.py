@@ -104,11 +104,11 @@ class QLearningAgent(ReinforcementAgent):
             return None
 
         # Choose a random action based on probability of flipping coin
-        # If yes, then we choose a random legal action
+        # If True, it means it returned with probability of epsilon, then we choose a random legal action
         if util.flipCoin(self.epsilon):
             return random.choice(legalActions)
         else:
-            # Otherwise, choose the best policy action
+            # Otherwise, we stick with the best policy action
             return self.computeActionFromQValues(state)
 
     def update(self, state, action, nextState, reward):
