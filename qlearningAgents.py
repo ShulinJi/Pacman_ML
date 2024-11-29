@@ -176,6 +176,7 @@ class ApproximateQAgent(PacmanQAgent):
        and update.  All other QLearningAgent functions
        should work as is.
     """
+
     def __init__(self, extractor='IdentityExtractor', **args):
         self.featExtractor = util.lookup(extractor, globals())()
         PacmanQAgent.__init__(self, **args)
@@ -189,23 +190,34 @@ class ApproximateQAgent(PacmanQAgent):
           Should return Q(state,action) = w * featureVector
           where * is the dotProduct operator
         """
-        "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        # Retrieve the feature vector for the given state and action
+        featureVector = self.featExtractor.getFeatures(state, action)
+        # Calculate and return the dot product of weights and features
+        return sum(self.weights[feature] * featureVector[feature] for feature in featureVector)
 
     def update(self, state, action, nextState, reward):
         """
            Should update your weights based on transition
         """
-        "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        # Get the feature vector for the given state and action
+        featureVector = self.featExtractor.getFeatures(state, action)
+        # Calculate the current Q-value, which is Q(s, a)
+        qValue = self.getQValue(state, action)
+        # Compute the value of the next state
+        nextValue = self.computeValueFromQValues(nextState)
+        # Calculate difference term: difference = (r + discount * nextStateValue) - currentQValue
+        difference = (reward + self.discount * nextValue) - qValue
+
+        # Update the weights for each feature
+        for feature in featureVector:
+            self.weights[feature] += self.alpha * difference * featureVector[feature]
 
     def final(self, state):
         "Called at the end of each game."
-        # call the super-class final method
+        # Call the superclass method
         PacmanQAgent.final(self, state)
 
-        # did we finish training?
+        # Check if the training is completed
         if self.episodesSoFar == self.numTraining:
-            # you might want to print your weights here for debugging
-            "*** YOUR CODE HERE ***"
-            pass
+            # Print weights for debugging purposes
+            print(self.weights)
