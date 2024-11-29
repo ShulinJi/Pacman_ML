@@ -60,12 +60,18 @@ class ValueIterationAgent(ValueEstimationAgent):
         self.runValueIteration()
 
     def runValueIteration(self):
+        # Iterate for the specified number of iterations
         for _ in range(self.iterations):
             new_values = util.Counter()
+            # Iterate over all states
             for state in self.mdp.getStates():
+                # Check if the state is not a terminal state
                 if not self.mdp.isTerminal(state):
+                    # Get all possible actions from the current state
                     actions = self.mdp.getPossibleActions(state)
+                    # Calculate the maximum Q-value among all actions and store in new values
                     new_values[state] = max(self.computeQValueFromValues(state, action) for action in actions)
+            # Update the agent's value estimates with the new values
             self.values = new_values
 
     def getValue(self, state):
@@ -151,42 +157,52 @@ class PrioritizedSweepingValueIterationAgent(ValueIterationAgent):
         ValueIterationAgent.__init__(self, mdp, discount, iterations)
 
     def runValueIteration(self):
+        # Use a dictionary of set for each state enables a O(1) search time complexity
         predecessors = {s: set() for s in self.mdp.getStates()}
         # Identify predecessors of each state
         for state in self.mdp.getStates():
             for action in self.mdp.getPossibleActions(state):
                 for nextState, transitionProb in self.mdp.getTransitionStatesAndProbs(state, action):
+                    # predecessors of a state s have non-zero transition probability
                     if transitionProb > 0:
                         predecessors[nextState].add(state)
 
+        # Initialize empty priority queue
         priorityQueue = util.PriorityQueue()
 
-        # Initialize priority queue with state differences
+        # Iterate over states in the order returned by self.mdp.getStates()
         for state in self.mdp.getStates():
+            # only iterate for non-terminal state
             if not self.mdp.isTerminal(state):
+                # Compute the max Qvalue across all possible actions from state (s)
                 maxQValue = max(
                     self.computeQValueFromValues(state, action) for action in self.mdp.getPossibleActions(state))
+                # Compute the absolute value of difference between current value of s and max Qvalue
                 diff = abs(self.values[state] - maxQValue)
                 priorityQueue.push(state, -diff)
 
         for _ in range(self.iterations):
-            # if there's nothing left in the queue, we finish
+            # if there's nothing left in the queue, we terminate
             if priorityQueue.isEmpty():
                 break
 
-            # Get the state with the highest priority
+            # Get the state s with the highest priority (highest error)
             state = priorityQueue.pop()
             if not self.mdp.isTerminal(state):
-                # Update the value of the state
+                # Update the value of the state (s)
                 maxQValue = max(
                     self.computeQValueFromValues(state, action) for action in self.mdp.getPossibleActions(state))
                 self.values[state] = maxQValue
 
-            # Update the priorities of predecessor states
+            # Update the priorities of predecessor states (p)
             for p in predecessors[state]:
                 if not self.mdp.isTerminal(p):
+                    # Compute the max Qvalue across all possible actions from p
                     maxQValue = max(
                         self.computeQValueFromValues(p, action) for action in self.mdp.getPossibleActions(p))
                     diff = abs(self.values[p] - maxQValue)
                     if diff > self.theta:
+                        # if not in the queue, simply act as push
+                        # if it already exists in the queue, we update the diff to make sure
+                        # there is no such p in the queue that has lower or equal priority (diff)
                         priorityQueue.update(p, -diff)
