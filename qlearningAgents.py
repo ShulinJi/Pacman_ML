@@ -192,8 +192,11 @@ class ApproximateQAgent(PacmanQAgent):
         """
         # Retrieve the feature vector for the given state and action
         featureVector = self.featExtractor.getFeatures(state, action)
-        # Calculate and return the dot product of weights and features
-        return sum(self.weights[feature] * featureVector[feature] for feature in featureVector)
+        # Calculate the QValue with weighted sum of feature functions and their weights
+        QValue = 0
+        for feature in featureVector:
+            QValue += self.weights[feature] * featureVector[feature]
+        return QValue
 
     def update(self, state, action, nextState, reward):
         """
@@ -214,10 +217,10 @@ class ApproximateQAgent(PacmanQAgent):
 
     def final(self, state):
         "Called at the end of each game."
-        # Call the superclass method
+        # call the super-class final method
         PacmanQAgent.final(self, state)
 
-        # Check if the training is completed
+        # did we finish training?
         if self.episodesSoFar == self.numTraining:
-            # Print weights for debugging purposes
+            # you might want to print your weights here for debugging
             print(self.weights)
